@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import ReactFlow, {
     Controls,
     Background,
@@ -97,9 +97,12 @@ const TimelineNode = ({ data }) => {
 
 const nodeTypes = { timeline: TimelineNode };
 
+import NodeEditModal from './NodeEditModal';
+
 const FlowMap = () => {
     const { steps, edges, onEdgesChange, onConnect } = useFlow();
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
+    const [selectedStepId, setSelectedStepId] = useState(null);
 
     // Auto-Layout with Dagre
     const getLayoutedElements = useCallback((currentNodes, currentEdges) => {
@@ -173,6 +176,10 @@ const FlowMap = () => {
         // We use edges directly from context, no need to setEdges local state if we pass context edges to ReactFlow
     }, [steps, edges, getLayoutedElements, setNodes]);
 
+    const onNodeClick = useCallback((event, node) => {
+        setSelectedStepId(node.id);
+    }, []);
+
     return (
         <Droppable droppableId="flow-map">
             {(provided) => (
@@ -203,12 +210,21 @@ const FlowMap = () => {
                         panOnScroll={true}
                         zoomOnScroll={true}
                         panOnDrag={true}
+                        onNodeClick={onNodeClick}
                     >
                         <Controls showInteractive={false} />
                         <Background color="#94a3b8" gap={20} size={1} variant="dots" />
                     </ReactFlow>
                     {/* Placeholder required for DnD but we hide it or let it be zero size since we don't render the list items here directly */}
                     <div style={{ display: 'none' }}>{provided.placeholder}</div>
+
+                    {/* Edit Modal */}
+                    {selectedStepId && (
+                        <NodeEditModal
+                            stepId={selectedStepId}
+                            onClose={() => setSelectedStepId(null)}
+                        />
+                    )}
                 </div>
             )}
         </Droppable>
