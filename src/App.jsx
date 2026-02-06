@@ -6,11 +6,12 @@ import FlowCanvas from './components/FlowCanvas';
 import FlowMap from './components/FlowMap';
 import ChatPreview from './components/ChatPreview';
 import PublishModal from './components/PublishModal';
-import { LayoutList, GitGraph, MonitorPlay } from 'lucide-react';
+import { LayoutList, GitGraph, MonitorPlay, Smartphone, X } from 'lucide-react';
 
 function App() {
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
   const [isPublishOpen, setIsPublishOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   return (
     <FlowProvider>
@@ -47,6 +48,13 @@ function App() {
               {/* Actions */}
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => setIsPreviewOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors shadow-sm"
+                >
+                  <Smartphone size={16} />
+                  Preview
+                </button>
+                <button
                   onClick={() => setIsPublishOpen(true)}
                   className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm ring-4 ring-transparent hover:ring-brand-100"
                 >
@@ -69,11 +77,30 @@ function App() {
             </div>
           </div>
 
-          {/* Right Panel - Live Preview */}
-          <ChatPreview />
-
           {/* Modals */}
           <PublishModal isOpen={isPublishOpen} onClose={() => setIsPublishOpen(false)} />
+
+          {/* Preview Modal */}
+          {isPreviewOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+              {/* Mobile Device Frame styling for senior developer feel */}
+              <div className="relative w-[375px] h-[812px] max-h-[90vh] bg-gray-900 rounded-[3rem] shadow-2xl border-[8px] border-gray-900 overflow-hidden flex flex-col animate-scale-up">
+                {/* Device Notch/Camera (Visual only) */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-900 rounded-b-xl z-20"></div>
+
+                {/* Screen Content */}
+                <div className="flex-1 bg-white overflow-hidden rounded-[2.5rem] relative">
+                  <ChatPreview onClose={() => setIsPreviewOpen(false)} />
+                </div>
+              </div>
+
+              {/* Close Button specific for modal context if needed, but ChatPreview already has one. 
+                    However, clicking outside should maybe close it too? 
+                    Let's add a wrapper close click.
+                 */}
+              <div className="absolute inset-0 -z-10" onClick={() => setIsPreviewOpen(false)}></div>
+            </div>
+          )}
         </div>
       </FlowBuilder>
     </FlowProvider>

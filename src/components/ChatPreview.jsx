@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useFlow } from '../context/FlowContext';
-import { Smartphone, RefreshCcw, Send, Check } from 'lucide-react';
+import { Smartphone, RefreshCcw, Send, Check, X } from 'lucide-react';
 
-const ChatPreview = () => {
+const ChatPreview = ({ onClose }) => {
     const { steps } = useFlow();
     const [history, setHistory] = useState([]);
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -85,26 +85,32 @@ const ChatPreview = () => {
         : null;
 
     const isInputDisabled = !currentBotMsg || (currentBotMsg.type !== 'text' && currentBotMsg.type !== 'email' && currentBotMsg.type !== 'phone' && currentBotMsg.type !== 'welcome');
-    // 'welcome' acts as a text input proceeding, or usually just auto-proceeds? 
-    // For simplicity, let's assume 'welcome' waits for ANY text or a button 'Start'. 
-    // Let's treat 'welcome' like a text input for now or add a 'Start' button.
-    // Actually, usually welcome is just a message. Let's Auto-proceed welcome? 
-    // Better: Welcome has a "Let's go" button implicitly or waits for text. I'll stick to text for now.
 
     return (
-        <div className="w-80 h-full bg-white border-l border-gray-200 flex flex-col shadow-[-4px_0_24px_rgba(0,0,0,0.02)] z-10">
+        <div className="w-full h-full flex flex-col bg-white">
             <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                 <div className="flex items-center gap-2 text-gray-700 font-semibold">
                     <Smartphone size={18} />
                     <span>Preview</span>
                 </div>
-                <button
-                    onClick={resetChat}
-                    className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
-                    title="Restart Chat"
-                >
-                    <RefreshCcw size={16} />
-                </button>
+                <div className="flex items-center gap-1">
+                    <button
+                        onClick={resetChat}
+                        className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
+                        title="Restart Chat"
+                    >
+                        <RefreshCcw size={16} />
+                    </button>
+                    {onClose && (
+                        <button
+                            onClick={onClose}
+                            className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
+                            title="Close Preview"
+                        >
+                            <X size={18} />
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="flex-1 bg-gray-100 p-4 overflow-y-auto">

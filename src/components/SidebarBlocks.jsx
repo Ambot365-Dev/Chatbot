@@ -1,19 +1,29 @@
 import React from 'react';
-import { MessageSquare, Type, List, CheckSquare, Mail, Phone, Flag } from 'lucide-react';
+import { MessageSquare, Type, List, CheckSquare, Mail, Phone, Flag, GripVertical } from 'lucide-react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useFlow } from '../context/FlowContext';
 
-const BlockButton = ({ icon: Icon, label, onClick }) => (
+const BlockButton = ({ icon: Icon, label, description, onClick }) => (
     <div
         role="button"
         tabIndex={0}
         onClick={onClick}
-        className="flex items-center gap-3 w-full p-3 text-left bg-white border border-gray-200 rounded-lg hover:border-brand-500 hover:shadow-md transition-all group cursor-grab active:cursor-grabbing"
+        className="flex items-center gap-3 w-full p-3.5 text-left bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md hover:border-brand-200 hover:bg-brand-50/30 transition-all duration-200 group cursor-grab active:cursor-grabbing relative overflow-hidden"
     >
-        <div className="p-2 bg-gray-50 rounded-md group-hover:bg-brand-50 group-hover:text-brand-600 transition-colors">
-            <Icon size={18} />
+        {/* Top Accent Line ("Pipeline") */}
+        <div className="absolute left-0 right-0 top-0 h-[3px] bg-brand-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+        <div className="text-gray-300 group-hover:text-brand-300 transition-colors cursor-grab">
+            <GripVertical size={16} />
         </div>
-        <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">{label}</span>
+
+        <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-50 text-gray-500 group-hover:bg-white group-hover:text-brand-600 group-hover:shadow-sm transition-all duration-200">
+            <Icon size={18} strokeWidth={2} />
+        </div>
+        <div className="flex flex-col">
+            <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900">{label}</span>
+            {description && <span className="text-[10px] text-gray-400 group-hover:text-brand-400 font-medium">{description}</span>}
+        </div>
     </div>
 );
 
@@ -21,13 +31,13 @@ const SidebarBlocks = () => {
     const { addStep } = useFlow();
 
     const blocks = [
-        { type: 'welcome', label: 'Welcome Screen', icon: MessageSquare },
-        { type: 'text', label: 'Text Input', icon: Type },
-        { type: 'mcq', label: 'Multichoice', icon: List },
-        { type: 'yesno', label: 'Yes/No', icon: CheckSquare },
-        { type: 'email', label: 'Email', icon: Mail },
-        { type: 'phone', label: 'Phone', icon: Phone },
-        { type: 'end', label: 'End Screen', icon: Flag },
+        { type: 'welcome', label: 'Welcome Screen', icon: MessageSquare, description: 'Start the conversation' },
+        { type: 'text', label: 'Paragraph', icon: Type, description: 'Long text input' },
+        { type: 'mcq', label: 'Multiple Choice', icon: List, description: 'Select one option' },
+        { type: 'yesno', label: 'Yes / No', icon: CheckSquare, description: 'Binary choice' },
+        { type: 'email', label: 'Email', icon: Mail, description: 'Collect email address' },
+        { type: 'phone', label: 'Phone Number', icon: Phone, description: 'Collect phone number' },
+        { type: 'end', label: 'End Screen', icon: Flag, description: 'End conversation' },
     ];
 
     return (
