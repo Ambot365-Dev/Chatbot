@@ -1,5 +1,11 @@
-import React from 'react';
-import { MessageSquare, Type, List, CheckSquare, Mail, Phone, Flag, Calendar, Hash, Link, Star, Upload, GripVertical } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+    MessageSquare, Type, List, CheckSquare, Mail, Phone, Flag,
+    Calendar, Hash, Link, Star, Upload, GripVertical, CircleDot,
+    Clock, Info, User, MapPin, Sliders, Image as ImageIcon,
+    Video, ExternalLink, Sparkles, MessageCircle, GitFork, ArrowRight,
+    ChevronDown, ChevronRight
+} from 'lucide-react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useFlow } from '../context/FlowContext';
 
@@ -29,82 +35,116 @@ const BlockButton = ({ icon: Icon, label, description, onClick }) => (
 
 const SidebarBlocks = () => {
     const { addStep } = useFlow();
+    const [openCategories, setOpenCategories] = useState({
+        'frequently': true,
+        'request': true,
+        'send': true,
+        'trigger': true
+    });
 
-    const blocks = [
-        { type: 'welcome', label: 'Welcome Screen', icon: MessageSquare, description: 'Start the conversation' },
-        { type: 'text', label: 'Text Input', icon: Type, description: 'Capture text response' },
-        { type: 'mcq', label: 'Multiple Choice', icon: List, description: 'Select one option' },
-        { type: 'yesno', label: 'Yes / No', icon: CheckSquare, description: 'Binary choice' },
-        { type: 'email', label: 'Email', icon: Mail, description: 'Collect email address' },
-        { type: 'phone', label: 'Phone Number', icon: Phone, description: 'Collect phone number' },
-        { type: 'date', label: 'Date', icon: Calendar, description: 'Capture a date' },
-        { type: 'number', label: 'Number', icon: Hash, description: 'Capture a number' },
-        { type: 'website', label: 'Website', icon: Link, description: 'Capture a URL' },
-        { type: 'rating', label: 'Rating', icon: Star, description: 'User rating' },
-        { type: 'file', label: 'File Upload', icon: Upload, description: 'Allow file upload' },
-        { type: 'end', label: 'End Screen', icon: Flag, description: 'End conversation' },
+    const toggleCategory = (key) => {
+        setOpenCategories(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const categories = [
+        {
+            key: 'request',
+            title: 'Request Information',
+            items: [
+                { type: 'text', label: 'Text Question', icon: Type, description: 'Capture text response' },
+                { type: 'name', label: 'Name', icon: User, description: 'Capture user name' },
+                { type: 'phone', label: 'Phone Number', icon: Phone, description: 'Collect phone number' },
+                { type: 'email', label: 'Email', icon: Mail, description: 'Collect email address' },
+                { type: 'single-choice', label: 'Single Choice', icon: CircleDot, description: 'Radio button selection' },
+                { type: 'mcq', label: 'Multiple Choice', icon: List, description: 'Select one option' },
+                { type: 'date', label: 'Date', icon: Calendar, description: 'Capture a date' },
+                { type: 'time', label: 'Time', icon: Clock, description: 'Capture a time' },
+                { type: 'number', label: 'Numeric Input', icon: Hash, description: 'Capture a number' },
+                { type: 'website', label: 'Website', icon: Link, description: 'Capture a URL' },
+                { type: 'location', label: 'Location', icon: MapPin, description: 'Capture location' },
+                { type: 'range', label: 'Range', icon: Sliders, description: 'Slider input' },
+                { type: 'rating', label: 'Rating', icon: Star, description: 'User rating' },
+                { type: 'file', label: 'File', icon: Upload, description: 'Allow file upload' },
+                { type: 'yesno', label: 'Yes / No', icon: CheckSquare, description: 'Binary choice' },
+            ]
+        },
+        {
+            key: 'send',
+            title: 'Send Information',
+            items: [
+                { type: 'statement', label: 'Message', icon: MessageSquare, description: 'Display text' },
+                { type: 'image', label: 'Image/GIF', icon: ImageIcon, description: 'Send an image' },
+                { type: 'video', label: 'Video', icon: Video, description: 'Send a video' },
+                { type: 'link-out', label: 'Web Link', icon: ExternalLink, description: 'Send a link' },
+            ]
+        },
+        {
+            key: 'trigger',
+            title: 'Trigger Action',
+            items: [
+                { type: 'live-chat', label: 'Live Chat', icon: MessageCircle, description: 'Handover to agent' },
+                { type: 'date-time', label: 'Appointment', icon: Calendar, description: 'Book appointment' },
+                { type: 'ai-response', label: 'AI Responses', icon: Sparkles, description: 'Generate AI reply' },
+                { type: 'redirect', label: 'Redirect', icon: ArrowRight, description: 'Navigate user' },
+                { type: 'end', label: 'End Screen', icon: Flag, description: 'End conversation' },
+            ]
+        }
     ];
 
     return (
-        <div className="w-64 h-full bg-white border-r border-gray-200 flex flex-col p-4 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 px-1">Blocks</h2>
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+            <div className="p-5 border-b border-gray-100 bg-white sticky top-0 z-10">
+                <h2 className="font-bold text-gray-800 text-lg tracking-tight">Question Types</h2>
+                <p className="text-xs text-gray-400 mt-1 font-medium">Drag & drop to build</p>
+            </div>
 
-            <Droppable droppableId="sidebar-blocks" isDropDisabled={true}>
-                {(provided) => (
-                    <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className="flex-1 overflow-y-auto scrollbar-hide space-y-2"
-                    >
-                        {blocks.map((block, index) => (
-                            <Draggable key={block.type} draggableId={block.type} index={index}>
-                                {(provided, snapshot) => (
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                {categories.map((category) => (
+                    <div key={category.key} className="mb-6">
+                        <button
+                            onClick={() => toggleCategory(category.key)}
+                            className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wider rounded-md transition-colors mb-3 group"
+                        >
+                            <span className="group-hover:text-brand-600 transition-colors">{category.title}</span>
+                            {openCategories[category.key] ?
+                                <ChevronDown size={14} className="text-gray-400 group-hover:text-brand-500" /> :
+                                <ChevronRight size={14} className="text-gray-400 group-hover:text-brand-500" />
+                            }
+                        </button>
+
+                        {openCategories[category.key] && (
+                            <Droppable droppableId={`sidebar-${category.key}`} isDropDisabled={true}>
+                                {(provided) => (
                                     <div
                                         ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        className="mb-2" // Add margin here instead of inside button for smoother drag
+                                        {...provided.droppableProps}
+                                        className="space-y-3 px-1 animate-fade-in-down"
                                     >
-                                        <BlockButton
-                                            {...block}
-                                            onClick={() => addStep(block.type)}
-                                        />
-                                        {snapshot.isDragging && (
-                                            <div className="fixed opacity-0 pointer-events-none">
-                                                {/* Ghost element if needed, but the library handles the clone usually. 
-                                                   Wait, if I drag it, it moves. 
-                                                   In sidebar usually we want a clone to be dragged.
-                                                   @hello-pangea/dnd removes the element from the source DOM when dragging.
-                                                   Since isDropDisabled=true on this droppable, it will just "return" if dropped elsewhere?
-                                                   No, we want it to COPY.
-                                                   dnd library doesn't support "copy" natively in a simple way without a copy-on-drag workaround.
-                                                   However, checking user requirements: "make the components dragable and drop".
-                                                   Usually implies the sidebar item stays there.
-                                                   
-                                                   Standard workaround: 
-                                                   On drag start, we don't modify the source list. 
-                                                   But visually the item is picked up.
-                                                   
-                                                   If I want "Clone" behavior, I need to render a copy in place?
-                                                   Or accept that it disappears while dragging. 
-                                                   "When dragging an item from the sidebar, it will temporarily disappear..." -> Plan said this.
-                                                   So I will stick to standard behavior.
-                                                */}
-                                            </div>
-                                        )}
+                                        {category.items.map((block, index) => (
+                                            <Draggable key={block.type} draggableId={`sidebar-${block.type}`} index={index}>
+                                                {(provided, snapshot) => (
+                                                    <div
+                                                        ref={provided.innerRef}
+                                                        {...provided.draggableProps}
+                                                        {...provided.dragHandleProps}
+                                                    >
+                                                        <BlockButton
+                                                            icon={block.icon}
+                                                            label={block.label}
+                                                            description={block.description}
+                                                            onClick={() => addStep(block.type)}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
                                     </div>
                                 )}
-                            </Draggable>
-                        ))}
-                        {provided.placeholder}
+                            </Droppable>
+                        )}
                     </div>
-                )}
-            </Droppable>
-
-            <div className="pt-4 border-t border-gray-100">
-                <div className="p-3 bg-blue-50 rounded-lg">
-                    <p className="text-xs text-blue-800 font-medium">Tip: Drag blocks or click to add.</p>
-                </div>
+                ))}
             </div>
         </div>
     );

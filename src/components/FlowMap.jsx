@@ -11,7 +11,12 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import dagre from 'dagre';
 import { useFlow } from '../context/FlowContext';
-import { MessageSquare, Type, List, CheckSquare, Mail, Phone, Flag, Calendar, Hash, Link, Star, Upload } from 'lucide-react';
+import {
+    MessageSquare, Type, List, CheckSquare, Mail, Phone, Flag,
+    Calendar, Hash, Link, Star, Upload, CircleDot, Clock, Info,
+    User, MapPin, Sliders, Image as ImageIcon, Video, ExternalLink,
+    Sparkles, MessageCircle, ArrowRight
+} from 'lucide-react';
 import { Droppable } from '@hello-pangea/dnd';
 
 // --- Custom Node Component ---
@@ -20,13 +25,26 @@ const icons = {
     text: Type,
     email: Mail,
     mcq: List,
+    'single-choice': CircleDot,
     yesno: CheckSquare,
     phone: Phone,
     date: Calendar,
+    time: Clock,
     number: Hash,
     website: Link,
     rating: Star,
     file: Upload,
+    statement: Info,
+    name: User,
+    location: MapPin,
+    range: Sliders,
+    image: ImageIcon,
+    video: Video,
+    'link-out': ExternalLink,
+    'live-chat': MessageCircle,
+    'ai-response': Sparkles,
+    redirect: ArrowRight,
+    'date-time': Calendar,
     end: Flag
 };
 
@@ -35,13 +53,26 @@ const colors = {
     text: { bg: 'bg-emerald-600', border: 'border-emerald-600', text: 'text-white' },
     email: { bg: 'bg-indigo-600', border: 'border-indigo-600', text: 'text-white' },
     mcq: { bg: 'bg-amber-500', border: 'border-amber-500', text: 'text-white' },
+    'single-choice': { bg: 'bg-orange-500', border: 'border-orange-500', text: 'text-white' },
     yesno: { bg: 'bg-cyan-600', border: 'border-cyan-600', text: 'text-white' },
     phone: { bg: 'bg-violet-600', border: 'border-violet-600', text: 'text-white' },
     date: { bg: 'bg-teal-600', border: 'border-teal-600', text: 'text-white' },
+    time: { bg: 'bg-cyan-700', border: 'border-cyan-700', text: 'text-white' },
     number: { bg: 'bg-lime-600', border: 'border-lime-600', text: 'text-white' },
     website: { bg: 'bg-sky-600', border: 'border-sky-600', text: 'text-white' },
     rating: { bg: 'bg-yellow-500', border: 'border-yellow-500', text: 'text-white' },
     file: { bg: 'bg-slate-600', border: 'border-slate-600', text: 'text-white' },
+    statement: { bg: 'bg-gray-500', border: 'border-gray-500', text: 'text-white' },
+    name: { bg: 'bg-blue-500', border: 'border-blue-500', text: 'text-white' },
+    location: { bg: 'bg-rose-500', border: 'border-rose-500', text: 'text-white' },
+    range: { bg: 'bg-emerald-500', border: 'border-emerald-500', text: 'text-white' },
+    image: { bg: 'bg-pink-600', border: 'border-pink-600', text: 'text-white' },
+    video: { bg: 'bg-red-600', border: 'border-red-600', text: 'text-white' },
+    'link-out': { bg: 'bg-blue-400', border: 'border-blue-400', text: 'text-white' },
+    'live-chat': { bg: 'bg-green-600', border: 'border-green-600', text: 'text-white' },
+    'ai-response': { bg: 'bg-violet-500', border: 'border-violet-500', text: 'text-white' },
+    redirect: { bg: 'bg-gray-600', border: 'border-gray-600', text: 'text-white' },
+    'date-time': { bg: 'bg-teal-700', border: 'border-teal-700', text: 'text-white' },
     end: { bg: 'bg-rose-600', border: 'border-rose-600', text: 'text-white' },
 };
 
@@ -182,14 +213,15 @@ const FlowMap = () => {
 
     return (
         <Droppable droppableId="flow-map">
-            {(provided) => (
+            {(provided, snapshot) => (
                 <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className="w-full h-full bg-gray-50 flex-1 relative"
+                    className={`w-full h-full bg-gray-50 flex-1 relative transition-all duration-200 ${snapshot.isDraggingOver ? 'ring-4 ring-brand-200 bg-brand-50/50' : ''
+                        }`}
                 >
-                    <div className="absolute top-4 left-4 z-10 bg-white/80 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold text-gray-500 border border-gray-200 shadow-sm">
-                        Visual Timeline
+                    <div className="absolute top-4 left-4 z-10 bg-white/80 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold text-gray-500 border border-gray-200 shadow-sm pointer-events-none">
+                        Visual Timeline {snapshot.isDraggingOver && "(Drop to Add)"}
                     </div>
                     <ReactFlow
                         nodes={nodes}
@@ -215,8 +247,8 @@ const FlowMap = () => {
                         <Controls showInteractive={false} />
                         <Background color="#94a3b8" gap={20} size={1} variant="dots" />
                     </ReactFlow>
-                    {/* Placeholder required for DnD but we hide it or let it be zero size since we don't render the list items here directly */}
-                    <div style={{ display: 'none' }}>{provided.placeholder}</div>
+                    {/* Placeholder required for DnD */}
+                    <div className="hidden">{provided.placeholder}</div>
 
                     {/* Edit Modal */}
                     {selectedStepId && (

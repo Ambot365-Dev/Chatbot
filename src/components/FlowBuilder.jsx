@@ -23,14 +23,16 @@ const FlowBuilder = ({ children }) => {
         }
 
         // Dragging from sidebar to canvas
-        if (source.droppableId === 'sidebar-blocks' && destination.droppableId === 'flow-canvas') {
-            insertStep(draggableId, destination.index);
+        if (source.droppableId.startsWith('sidebar-') && destination.droppableId === 'flow-canvas') {
+            const type = draggableId.replace('sidebar-', '');
+            insertStep(type, destination.index);
             return;
         }
 
         // Dragging from sidebar to visual map
-        if (source.droppableId === 'sidebar-blocks' && destination.droppableId === 'flow-map') {
-            insertStep(draggableId, steps.length); // Append to the end
+        if (source.droppableId.startsWith('sidebar-') && destination.droppableId === 'flow-map') {
+            const type = draggableId.replace('sidebar-', '');
+            insertStep(type, steps.length); // Append to the end
             return;
         }
     }, [steps, reorderSteps, insertStep]);

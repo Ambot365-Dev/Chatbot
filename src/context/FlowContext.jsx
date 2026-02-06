@@ -96,13 +96,27 @@ export const FlowProvider = ({ children }) => {
     }, [state]);
 
     const addStep = (type) => {
+        let title = 'New Question';
+        if (type === 'welcome') title = 'Welcome message';
+        else if (type === 'statement') title = 'Information';
+        else if (type === 'name') title = 'What is your name?';
+        else if (type === 'location') title = 'Please share your location';
+        else if (type === 'image') title = 'Image Message';
+        else if (type === 'video') title = 'Video Message';
+        else if (type === 'link-out') title = 'Visit Link';
+        else if (type === 'live-chat') title = 'Connect to Agent';
+        else if (type === 'ai-response') title = 'AI Response';
+        else if (type === 'redirect') title = 'Redirecting...';
+        else if (type === 'date-time') title = 'Book Appointment';
+
         const newStep = {
             id: crypto.randomUUID(),
             type,
-            title: type === 'welcome' ? 'Welcome message' : 'New Question',
+            title,
             required: false,
-            options: type === 'mcq' || type === 'yesno' ? ['Option 1'] : undefined,
+            options: type === 'mcq' || type === 'yesno' || type === 'single-choice' ? ['Option 1'] : undefined,
             ratingScale: type === 'rating' ? 5 : undefined,
+            range: type === 'range' ? { min: 0, max: 100 } : undefined,
         };
         dispatch({ type: 'ADD_STEP', payload: newStep });
     };
@@ -116,13 +130,27 @@ export const FlowProvider = ({ children }) => {
     const reorderSteps = (newSteps) => dispatch({ type: 'REORDER_STEPS', payload: newSteps });
 
     const insertStep = (type, index) => {
+        let title = 'New Question';
+        if (type === 'welcome') title = 'Welcome message';
+        else if (type === 'statement') title = 'Information';
+        else if (type === 'name') title = 'What is your name?';
+        else if (type === 'location') title = 'Please share your location';
+        else if (type === 'image') title = 'Image Message';
+        else if (type === 'video') title = 'Video Message';
+        else if (type === 'link-out') title = 'Visit Link';
+        else if (type === 'live-chat') title = 'Connect to Agent';
+        else if (type === 'ai-response') title = 'AI Response';
+        else if (type === 'redirect') title = 'Redirecting...';
+        else if (type === 'date-time') title = 'Book Appointment';
+
         const newStep = {
             id: crypto.randomUUID(),
             type,
-            title: type === 'welcome' ? 'Welcome message' : 'New Question',
+            title,
             required: false,
-            options: type === 'mcq' || type === 'yesno' ? ['Option 1'] : undefined,
+            options: type === 'mcq' || type === 'yesno' || type === 'single-choice' ? ['Option 1'] : undefined,
             ratingScale: type === 'rating' ? 5 : undefined,
+            range: type === 'range' ? { min: 0, max: 100 } : undefined,
         };
         dispatch({ type: 'INSERT_STEP', payload: { step: newStep, index } });
     };
