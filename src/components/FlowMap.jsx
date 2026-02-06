@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import ReactFlow, {
     Controls,
     Background,
@@ -11,7 +11,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import dagre from 'dagre';
 import { useFlow } from '../context/FlowContext';
-import { Mail, MessageSquare, List, CheckSquare, Phone, Flag, Type } from 'lucide-react';
+import { MessageSquare, Type, List, CheckSquare, Mail, Phone, Flag, Calendar, Hash, Link, Star, Upload } from 'lucide-react';
 import { Droppable } from '@hello-pangea/dnd';
 
 // --- Custom Node Component ---
@@ -22,107 +22,139 @@ const icons = {
     mcq: List,
     yesno: CheckSquare,
     phone: Phone,
+    date: Calendar,
+    number: Hash,
+    website: Link,
+    rating: Star,
+    file: Upload,
     end: Flag
 };
 
 const colors = {
-    welcome: 'bg-blue-50 border-blue-200 text-blue-600',
-    text: 'bg-white border-gray-200 text-gray-600',
-    email: 'bg-purple-50 border-purple-200 text-purple-600',
-    mcq: 'bg-orange-50 border-orange-200 text-orange-600',
-    yesno: 'bg-green-50 border-green-200 text-green-600',
-    phone: 'bg-indigo-50 border-indigo-200 text-indigo-600',
-    end: 'bg-red-50 border-red-200 text-red-600',
+    welcome: { bg: 'bg-blue-600', border: 'border-blue-600', text: 'text-white' },
+    text: { bg: 'bg-emerald-600', border: 'border-emerald-600', text: 'text-white' },
+    email: { bg: 'bg-indigo-600', border: 'border-indigo-600', text: 'text-white' },
+    mcq: { bg: 'bg-amber-500', border: 'border-amber-500', text: 'text-white' },
+    yesno: { bg: 'bg-cyan-600', border: 'border-cyan-600', text: 'text-white' },
+    phone: { bg: 'bg-violet-600', border: 'border-violet-600', text: 'text-white' },
+    date: { bg: 'bg-teal-600', border: 'border-teal-600', text: 'text-white' },
+    number: { bg: 'bg-lime-600', border: 'border-lime-600', text: 'text-white' },
+    website: { bg: 'bg-sky-600', border: 'border-sky-600', text: 'text-white' },
+    rating: { bg: 'bg-yellow-500', border: 'border-yellow-500', text: 'text-white' },
+    file: { bg: 'bg-slate-600', border: 'border-slate-600', text: 'text-white' },
+    end: { bg: 'bg-rose-600', border: 'border-rose-600', text: 'text-white' },
 };
 
 const TimelineNode = ({ data }) => {
     const Icon = icons[data.type] || MessageSquare;
-    const theme = colors[data.type] || colors.text;
+    const theme = colors[data.type] || { bg: 'bg-gray-600', border: 'border-gray-600', text: 'text-white' };
 
     return (
-        <div className={`relative w-[280px] p-4 rounded-xl border-2 shadow-sm transition-all hover:shadow-md ${theme} group`}>
-            {/* Input Handle - Left */}
-            {data.index !== 0 && (
+        <div className="w-[260px] bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-200 border border-gray-100 overflow-hidden font-sans group">
+            {/* Header */}
+            <div className={`${theme.bg} px-4 py-2.5 flex items-center gap-2.5`}>
+                <div className="text-white/90">
+                    <Icon size={16} strokeWidth={2.5} />
+                </div>
+                <span className="text-white font-semibold text-xs uppercase tracking-wide opacity-95">
+                    {data.type === 'mcq' ? 'Choice' : data.type}
+                </span>
+                {/* Options/Menu dot (visual only) */}
+                <div className="ml-auto w-1 h-1 bg-white/50 rounded-full"></div>
+            </div>
+
+            {/* Body */}
+            <div className="p-4 bg-white">
+                <div className="text-sm font-medium text-gray-800 leading-snug line-clamp-3">
+                    {data.label || "Click to edit..."}
+                </div>
+                {/* Subtext or metadata if any */}
+                {data.required && (
+                    <div className="mt-2 text-[10px] text-gray-400 font-medium bg-gray-50 inline-block px-1.5 py-0.5 rounded">
+                        Required
+                    </div>
+                )}
+            </div>
+
+            {/* Left Input Handle */}
+            {data.type !== 'welcome' && (
                 <Handle
                     type="target"
                     position={Position.Left}
-                    className="!bg-gray-400 !w-3 !h-3 -ml-2 border-2 border-white"
+                    className="!bg-white !border-2 !border-gray-400 !w-3 !h-3 -ml-[7px]"
                 />
             )}
 
-            <div className="flex items-start gap-4">
-                <div className={`p-2.5 rounded-lg bg-white bg-opacity-60 shadow-sm shrink-0`}>
-                    <Icon size={20} />
-                </div>
-                <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider opacity-60 mb-0.5">{data.type}</div>
-                    <div className="text-sm font-semibold leading-tight line-clamp-2">{data.label}</div>
-                </div>
-            </div>
-
-            {/* Output Handle - Right */}
-            {!data.isLast && (
-                <Handle
-                    type="source"
-                    position={Position.Right}
-                    className="!bg-gray-400 !w-3 !h-3 -mr-2 border-2 border-white"
-                />
-            )}
+            {/* Right Output Handle */}
+            <Handle
+                type="source"
+                position={Position.Right}
+                className="!bg-white !border-2 !border-brand-500 !w-3 !h-3 -mr-[7px]"
+            />
         </div>
     );
 };
 
 const nodeTypes = { timeline: TimelineNode };
 
-// --- Layout Logic ---
-const nodeWidth = 300;
-const nodeHeight = 120;
-
-const getLayoutedElements = (nodes, edges) => {
-    const dagreGraph = new dagre.graphlib.Graph();
-    dagreGraph.setDefaultEdgeLabel(() => ({}));
-
-    // LR = Left to Right
-    dagreGraph.setGraph({ rankdir: 'LR', ranksep: 100, nodesep: 30 });
-
-    nodes.forEach((node) => {
-        dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-    });
-
-    edges.forEach((edge) => {
-        dagreGraph.setEdge(edge.source, edge.target);
-    });
-
-    dagre.layout(dagreGraph);
-
-    nodes.forEach((node) => {
-        const nodeWithPosition = dagreGraph.node(node.id);
-        node.targetPosition = 'left';
-        node.sourcePosition = 'right';
-
-        node.position = {
-            x: nodeWithPosition.x - nodeWidth / 2,
-            y: nodeWithPosition.y - nodeHeight / 2,
-        };
-    });
-
-    return { nodes, edges };
-};
-
 const FlowMap = () => {
-    const { steps } = useFlow();
+    const { steps, edges, onEdgesChange, onConnect } = useFlow();
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
-    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
+    // Auto-Layout with Dagre
+    const getLayoutedElements = useCallback((currentNodes, currentEdges) => {
+        const dagreGraph = new dagre.graphlib.Graph();
+        dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+        dagreGraph.setGraph({ rankdir: 'LR', ranksep: 100, nodesep: 30 });
+
+        currentNodes.forEach((node) => {
+            dagreGraph.setNode(node.id, { width: 260, height: 100 });
+        });
+
+        // Use standard edges for layout
+        currentEdges.forEach((edge) => {
+            dagreGraph.setEdge(edge.source, edge.target);
+        });
+
+        dagre.layout(dagreGraph);
+
+        // ... rest of layout logic (mapping positions) ...
+        const layoutedNodes = currentNodes.map((node) => {
+            const nodeWithPosition = dagreGraph.node(node.id);
+            node.targetPosition = 'left';
+            node.sourcePosition = 'right';
+
+            // We are shifting the dagre positioning a bit to center or handling it
+            // Actually dagre gives top-left usually? 
+            // ReactFlow nodes have position.
+
+            // Note: If user dragged a node, we might want to preserve that?
+            // But this auto-layout runs on change. 
+            // For now, strict auto-layout is fine for a "Flow Map".
+            // Or we can only run it on mount?
+            // Let's run it when steps/edges change.
+
+            return {
+                ...node,
+                position: {
+                    x: nodeWithPosition.x - 130, // Center offset (width/2)
+                    y: nodeWithPosition.y - 50,
+                },
+            };
+        });
+
+        return { nodes: layoutedNodes, edges: currentEdges };
+    }, []);
+
+    // Sync Steps & Edges to Nodes & Edges
     useEffect(() => {
         if (steps.length === 0) {
             setNodes([]);
-            setEdges([]);
             return;
         }
 
-        // Transform steps to Nodes
-        const newNodes = steps.map((step, index) => ({
+        const flowNodes = steps.map((step, index) => ({
             id: step.id,
             type: 'timeline', // Use our custom component
             data: {
@@ -131,27 +163,15 @@ const FlowMap = () => {
                 index: index,
                 isLast: index === steps.length - 1
             },
-            position: { x: 0, y: 0 },
+            position: { x: 0, y: 0 }, // Initial, will be layouted
         }));
 
-        const newEdges = [];
-        for (let i = 0; i < steps.length - 1; i++) {
-            newEdges.push({
-                id: `e${steps[i].id}-${steps[i + 1].id}`,
-                source: steps[i].id,
-                target: steps[i + 1].id,
-                type: 'default',
-                markerEnd: { type: MarkerType.ArrowClosed, color: '#64748b' },
-                animated: false,
-                style: { stroke: '#94a3b8', strokeWidth: 2 },
-            });
-        }
+        // Run layout
+        const { nodes: layoutedNodes } = getLayoutedElements(flowNodes, edges);
+        setNodes(layoutedNodes);
 
-        const layouted = getLayoutedElements(newNodes, newEdges);
-        setNodes(layouted.nodes);
-        setEdges(layouted.edges);
-
-    }, [steps, setNodes, setEdges]); // Layout will still trigger on step changes, which is acceptable for now.
+        // We use edges directly from context, no need to setEdges local state if we pass context edges to ReactFlow
+    }, [steps, edges, getLayoutedElements, setNodes]);
 
     return (
         <Droppable droppableId="flow-map">
@@ -170,6 +190,13 @@ const FlowMap = () => {
                         nodeTypes={nodeTypes}
                         onNodesChange={onNodesChange}
                         onEdgesChange={onEdgesChange}
+                        onConnect={onConnect}
+                        defaultEdgeOptions={{
+                            type: 'smoothstep',
+                            animated: true,
+                            style: { stroke: '#94a3b8', strokeWidth: 2 },
+                            markerEnd: { type: MarkerType.ArrowClosed, color: '#64748b' },
+                        }}
                         fitView
                         attributionPosition="bottom-right"
                         nodesDraggable={true}

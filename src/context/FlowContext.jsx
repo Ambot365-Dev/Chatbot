@@ -1,63 +1,86 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { addEdge, applyEdgeChanges, applyNodeChanges } from 'reactflow';
 
 const FlowContext = createContext();
 
-const initialSteps = [
-    {
-        id: 'welcome-1',
-        type: 'welcome',
-        title: 'Welcome to our service! How can we help you?',
-        required: true,
-    },
-    {
-        id: 'email-1',
-        type: 'email',
-        title: 'Please enter your email address:',
-        required: true,
-        placeholder: 'name@example.com'
-    }
-];
+const initialData = {
+    steps: [
+        {
+            id: 'welcome-1',
+            type: 'welcome',
+            title: 'Welcome to our service! How can we help you?',
+            required: true,
+        },
+        {
+            id: 'email-1',
+            type: 'email',
+            title: 'Please enter your email address:',
+            required: true,
+            placeholder: 'name@example.com'
+        }
+    ],
+    edges: [
+        { id: 'e-welcome-1-email-1', source: 'welcome-1', target: 'email-1' }
+    ]
+};
 
 // Load from local storage if available
 const loadInitialState = () => {
-    const saved = localStorage.getItem('chatbot-flow');
-    return saved ? JSON.parse(saved) : initialSteps;
+    const saved = localStorage.getItem('chatbot-flow-data');
+    return saved ? JSON.parse(saved) : initialData;
 };
 
 const flowReducer = (state, action) => {
     switch (action.type) {
         case 'ADD_STEP':
-            return [...state, action.payload];
+            return { ...state, steps: [...state.steps, action.payload] };
 
-        case 'DELETE_STEP':
-            return state.filter(step => step.id !== action.payload);
+        case 'DELETE_STEP': // Remove step AND connected edges
+            return {
+                ...state,
+                steps: state.steps.filter(step => step.id !== action.payload),
+                edges: state.edges.filter(edge => edge.source !== action.payload && edge.target !== action.payload)
+            };
 
         case 'UPDATE_STEP':
-            return state.map(step =>
-                step.id === action.payload.id ? { ...step, ...action.payload.updates } : step
-            );
+            return {
+                ...state,
+                steps: state.steps.map(step =>
+                    step.id === action.payload.id ? { ...step, ...action.payload.updates } : step
+                )
+            };
 
         case 'DUPLICATE_STEP': {
-            const index = state.findIndex(s => s.id === action.payload);
-            const stepToCopy = state[index];
+            const index = state.steps.findIndex(s => s.id === action.payload);
+            const stepToCopy = state.steps[index];
             const newStep = {
                 ...stepToCopy,
                 id: crypto.randomUUID(),
                 title: `${stepToCopy.title} (Copy)`
             };
-            const newState = [...state];
-            newState.splice(index + 1, 0, newStep);
-            return newState;
+            const newSteps = [...state.steps];
+            newSteps.splice(index + 1, 0, newStep);
+            return { ...state, steps: newSteps };
         }
 
         case 'REORDER_STEPS':
-            return action.payload; // payload is the new array
+            return { ...state, steps: action.payload };
 
         case 'INSERT_STEP': {
-            const newState = [...state];
-            newState.splice(action.payload.index, 0, action.payload.step);
-            return newState;
+            const newSteps = [...state.steps];
+            newSteps.splice(action.payload.index, 0, action.payload.step);
+            return { ...state, steps: newSteps };
         }
+
+        // --- Edge Actions ---
+        case 'ADD_EDGE':
+            return { ...state, edges: addEdge(action.payload, state.edges) };
+
+        case 'SET_EDGES':
+            return { ...state, edges: action.payload };
+
+        case 'EDGES_CHANGE':
+            return { ...state, edges: applyEdgeChanges(action.payload, state.edges) };
 
         default:
             return state;
@@ -65,12 +88,12 @@ const flowReducer = (state, action) => {
 };
 
 export const FlowProvider = ({ children }) => {
-    const [steps, dispatch] = useReducer(flowReducer, [], loadInitialState);
+    const [state, dispatch] = useReducer(flowReducer, initialData, loadInitialState);
 
     // Auto-save to localStorage
     useEffect(() => {
-        localStorage.setItem('chatbot-flow', JSON.stringify(steps));
-    }, [steps]);
+        localStorage.setItem('chatbot-flow-data', JSON.stringify(state));
+    }, [state]);
 
     const addStep = (type) => {
         const newStep = {
@@ -79,6 +102,7 @@ export const FlowProvider = ({ children }) => {
             title: type === 'welcome' ? 'Welcome message' : 'New Question',
             required: false,
             options: type === 'mcq' || type === 'yesno' ? ['Option 1'] : undefined,
+            ratingScale: type === 'rating' ? 5 : undefined,
         };
         dispatch({ type: 'ADD_STEP', payload: newStep });
     };
@@ -98,19 +122,29 @@ export const FlowProvider = ({ children }) => {
             title: type === 'welcome' ? 'Welcome message' : 'New Question',
             required: false,
             options: type === 'mcq' || type === 'yesno' ? ['Option 1'] : undefined,
+            ratingScale: type === 'rating' ? 5 : undefined,
         };
         dispatch({ type: 'INSERT_STEP', payload: { step: newStep, index } });
     };
 
+    // Edge Helpers
+    const onEdgesChange = (changes) => dispatch({ type: 'EDGES_CHANGE', payload: changes });
+    const onConnect = (connection) => dispatch({ type: 'ADD_EDGE', payload: connection });
+    const setEdges = (edges) => dispatch({ type: 'SET_EDGES', payload: edges });
+
     return (
         <FlowContext.Provider value={{
-            steps,
+            steps: state.steps, // Expose steps directly for backward compatibility
+            edges: state.edges,
             addStep,
             deleteStep,
             updateStep,
             duplicateStep,
             reorderSteps,
-            insertStep
+            insertStep,
+            onEdgesChange,
+            onConnect,
+            setEdges
         }}>
             {children}
         </FlowContext.Provider>

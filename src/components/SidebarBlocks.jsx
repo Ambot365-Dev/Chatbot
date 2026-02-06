@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageSquare, Type, List, CheckSquare, Mail, Phone, Flag } from 'lucide-react';
+import { MessageSquare, Type, List, CheckSquare, Mail, Phone, Flag, Calendar, Hash, Link, Star, Upload } from 'lucide-react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useFlow } from '../context/FlowContext';
 
@@ -27,6 +27,11 @@ const SidebarBlocks = () => {
         { type: 'yesno', label: 'Yes/No', icon: CheckSquare },
         { type: 'email', label: 'Email', icon: Mail },
         { type: 'phone', label: 'Phone', icon: Phone },
+        { type: 'date', label: 'Date', icon: Calendar },
+        { type: 'number', label: 'Number', icon: Hash },
+        { type: 'website', label: 'Website', icon: Link },
+        { type: 'rating', label: 'Rating', icon: Star },
+        { type: 'file', label: 'File Upload', icon: Upload },
         { type: 'end', label: 'End Screen', icon: Flag },
     ];
 

@@ -23,6 +23,11 @@ const StepEditor = ({ step, updateStep }) => {
         case 'text':
         case 'email':
         case 'phone':
+        case 'date':
+        case 'number':
+        case 'website':
+        case 'file':
+        case 'rating':
         case 'welcome':
         case 'end':
             return (
