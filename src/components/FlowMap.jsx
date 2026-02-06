@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import ReactFlow, {
     Controls,
     Background,
@@ -12,6 +12,7 @@ import 'reactflow/dist/style.css';
 import dagre from 'dagre';
 import { useFlow } from '../context/FlowContext';
 import { Mail, MessageSquare, List, CheckSquare, Phone, Flag, Type } from 'lucide-react';
+import { Droppable } from '@hello-pangea/dnd';
 
 // --- Custom Node Component ---
 const icons = {
@@ -40,9 +41,13 @@ const TimelineNode = ({ data }) => {
 
     return (
         <div className={`relative w-[280px] p-4 rounded-xl border-2 shadow-sm transition-all hover:shadow-md ${theme} group`}>
-            {/* Input Handle */}
+            {/* Input Handle - Left */}
             {data.index !== 0 && (
-                <Handle type="target" position={Position.Top} className="!bg-gray-400 !w-3 !h-3 -mt-2" />
+                <Handle
+                    type="target"
+                    position={Position.Left}
+                    className="!bg-gray-400 !w-3 !h-3 -ml-2 border-2 border-white"
+                />
             )}
 
             <div className="flex items-start gap-4">
@@ -55,9 +60,13 @@ const TimelineNode = ({ data }) => {
                 </div>
             </div>
 
-            {/* Output Handle */}
+            {/* Output Handle - Right */}
             {!data.isLast && (
-                <Handle type="source" position={Position.Bottom} className="!bg-gray-400 !w-3 !h-3 -mb-2" />
+                <Handle
+                    type="source"
+                    position={Position.Right}
+                    className="!bg-gray-400 !w-3 !h-3 -mr-2 border-2 border-white"
+                />
             )}
         </div>
     );
@@ -73,7 +82,8 @@ const getLayoutedElements = (nodes, edges) => {
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-    dagreGraph.setGraph({ rankdir: 'TB', ranksep: 60, nodesep: 50 }); // TB = Top to Bottom
+    // LR = Left to Right
+    dagreGraph.setGraph({ rankdir: 'LR', ranksep: 100, nodesep: 30 });
 
     nodes.forEach((node) => {
         dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
@@ -87,8 +97,8 @@ const getLayoutedElements = (nodes, edges) => {
 
     nodes.forEach((node) => {
         const nodeWithPosition = dagreGraph.node(node.id);
-        node.targetPosition = 'top';
-        node.sourcePosition = 'bottom';
+        node.targetPosition = 'left';
+        node.sourcePosition = 'right';
 
         node.position = {
             x: nodeWithPosition.x - nodeWidth / 2,
@@ -131,9 +141,9 @@ const FlowMap = () => {
                 source: steps[i].id,
                 target: steps[i + 1].id,
                 type: 'default',
-                markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8' },
+                markerEnd: { type: MarkerType.ArrowClosed, color: '#64748b' },
                 animated: false,
-                style: { stroke: '#cbd5e1', strokeWidth: 3 },
+                style: { stroke: '#94a3b8', strokeWidth: 2 },
             });
         }
 
@@ -141,29 +151,40 @@ const FlowMap = () => {
         setNodes(layouted.nodes);
         setEdges(layouted.edges);
 
-    }, [steps, setNodes, setEdges]);
-
-    const key = useMemo(() => steps.map(s => s.id).join(','), [steps]);
+    }, [steps, setNodes, setEdges]); // Layout will still trigger on step changes, which is acceptable for now.
 
     return (
-        <div className="w-full h-full bg-gray-50 flex-1 relative">
-            <div className="absolute top-4 left-4 z-10 bg-white/80 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold text-gray-500 border border-gray-200 shadow-sm">
-                Visual Timeline
-            </div>
-            <ReactFlow
-                key={key}
-                nodes={nodes}
-                edges={edges}
-                nodeTypes={nodeTypes}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                fitView
-                attributionPosition="bottom-right"
-            >
-                <Controls />
-                <Background color="#e2e8f0" gap={24} size={2} />
-            </ReactFlow>
-        </div>
+        <Droppable droppableId="flow-map">
+            {(provided) => (
+                <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="w-full h-full bg-gray-50 flex-1 relative"
+                >
+                    <div className="absolute top-4 left-4 z-10 bg-white/80 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold text-gray-500 border border-gray-200 shadow-sm">
+                        Visual Timeline
+                    </div>
+                    <ReactFlow
+                        nodes={nodes}
+                        edges={edges}
+                        nodeTypes={nodeTypes}
+                        onNodesChange={onNodesChange}
+                        onEdgesChange={onEdgesChange}
+                        fitView
+                        attributionPosition="bottom-right"
+                        nodesDraggable={true}
+                        panOnScroll={true}
+                        zoomOnScroll={true}
+                        panOnDrag={true}
+                    >
+                        <Controls showInteractive={false} />
+                        <Background color="#94a3b8" gap={20} size={1} variant="dots" />
+                    </ReactFlow>
+                    {/* Placeholder required for DnD but we hide it or let it be zero size since we don't render the list items here directly */}
+                    <div style={{ display: 'none' }}>{provided.placeholder}</div>
+                </div>
+            )}
+        </Droppable>
     );
 };
 

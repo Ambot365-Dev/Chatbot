@@ -53,6 +53,12 @@ const flowReducer = (state, action) => {
         case 'REORDER_STEPS':
             return action.payload; // payload is the new array
 
+        case 'INSERT_STEP': {
+            const newState = [...state];
+            newState.splice(action.payload.index, 0, action.payload.step);
+            return newState;
+        }
+
         default:
             return state;
     }
@@ -85,6 +91,17 @@ export const FlowProvider = ({ children }) => {
 
     const reorderSteps = (newSteps) => dispatch({ type: 'REORDER_STEPS', payload: newSteps });
 
+    const insertStep = (type, index) => {
+        const newStep = {
+            id: crypto.randomUUID(),
+            type,
+            title: type === 'welcome' ? 'Welcome message' : 'New Question',
+            required: false,
+            options: type === 'mcq' || type === 'yesno' ? ['Option 1'] : undefined,
+        };
+        dispatch({ type: 'INSERT_STEP', payload: { step: newStep, index } });
+    };
+
     return (
         <FlowContext.Provider value={{
             steps,
@@ -92,7 +109,8 @@ export const FlowProvider = ({ children }) => {
             deleteStep,
             updateStep,
             duplicateStep,
-            reorderSteps
+            reorderSteps,
+            insertStep
         }}>
             {children}
         </FlowContext.Provider>
